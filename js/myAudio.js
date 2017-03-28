@@ -38,16 +38,17 @@ Gary Bishop January 2012
     }
 
     function say(voice, language, text) {
-        var mp3 = speechUrl(voice, language, text);
-        playAudio(mp3);
+        // ANDREW -- COMENTING THIS OUT
+        // var mp3 = speechUrl(voice, language, text);
+        // playAudio(mp3);
     }
-    
+
     function playAudio(mp3) {
         //console.log('play', mp3);
         if (!audio) {
             initialize();
         }
-        
+
         if (audio && audio != 'flash') {
             audio.src = mp3;
             audio.load();
@@ -64,12 +65,12 @@ Gary Bishop January 2012
             AudioPlayer.close('flashplayer'); // this may not work
         }
     }
-    
+
     function getAudio() {
         console.log(audio);
         return audio;
     }
-    
+
     window.myAudio = {
         getAudio: getAudio,
         initialize: initialize,

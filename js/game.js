@@ -110,7 +110,7 @@ AssetManager.prototype.getAsset = function(path) {
 }
 // plays the requested sound; OPTIONAL argument of repeat (default value is true)
 // returns the source for future reference
-AssetManager.prototype.playSound = function(path, repeat) {
+AssetManager.prototype.playSound = $.noop /* ANDREW */ || function(path, repeat) {
     // if the context is defined and the buffer exists
     if (this.audioContext && this.sounds[path]) {
         var source = this.audioContext.createBufferSource(), gainNode = this.audioContext.createGainNode();
@@ -128,7 +128,7 @@ AssetManager.prototype.playSound = function(path, repeat) {
     }
 }
 // play sound with respect to the entity's position (enemies, gems, etc. call this function)
-AssetManager.prototype.playSoundWithPosition = function(entity, path, repeat) {
+AssetManager.prototype.playSoundWithPosition = $.noop /* ANDREW */ || function(entity, path, repeat) {
     // if the context is defined and the buffer exists
     if (this.audioContext && this.sounds[path]) {
         var source = this.audioContext.createBufferSource(), panner = this.audioContext.createPanner();
@@ -220,7 +220,7 @@ AnimatedEntity.prototype.distanceToHero = function() {
 AnimatedEntity.prototype.update = function() {
 }
 
-AnimatedEntity.prototype.emitSound = function(soundName, repeat) {
+AnimatedEntity.prototype.emitSound = $.noop /* ANDREW */ || function(soundName, repeat) {
     if (!this.sound.isPlaying) {
         // playing for the very first time
         this.sound.name = soundName;
@@ -260,7 +260,7 @@ var count = 0;
 // check the proposed x and y bounds and see whether we can move there
 // x and y are in pixels
 AnimatedEntity.prototype.isPathClear = function(newX, newY, useAdjustedCoords, compareEntities, considerHero) {
-    var compareEntities = typeof compareEntities === 'undefined' ? true : compareEntities, 
+    var compareEntities = typeof compareEntities === 'undefined' ? true : compareEntities,
         considerHero = typeof considerHero === 'undefined' ? true : considerHero;
 
     // let's check the map array to see whether the new location is free or not
@@ -268,10 +268,10 @@ AnimatedEntity.prototype.isPathClear = function(newX, newY, useAdjustedCoords, c
         x : newX,
         y : newY
     };
-   
+
    var numTilesX = Math.ceil(this.game.frameWidth / this.game.dungeon.tileSize),
        numTilesY = Math.ceil(this.game.frameHeight / this.game.dungeon.tileSize);
-        
+
     // gets the corresponding tile number (i and j) for use in retrieval in map
     var tileX = Math.floor(adjustedCoords.x / this.game.dungeon.tileSize),
         tileY = Math.floor(adjustedCoords.y / this.game.dungeon.tileSize);
@@ -392,7 +392,7 @@ AnimatedEntity.prototype.attackEnemy = function() {
 AnimatedEntity.prototype.getAdjustedCoords = function(newX, newY) {
     var x = null,
         y = null;
-    
+
     switch(this.direction) {
         case 'up':
             // most natural way to do is to take the character's center
@@ -434,7 +434,7 @@ function Hero(game, x, y, width, height, direction) {
     // this will change depending on the direction; 518 is for the sprite in going in the upward direction (default)
     this.scaleToX = 38; // 38
     this.scaleToY = 42; // 42
-    this.direction = typeof direction === 'undefined' ? 'up' : direction; 
+    this.direction = typeof direction === 'undefined' ? 'up' : direction;
     this.experience = 0;
     this.neededExperienceToLevel = 100;
     this.level = 1;
@@ -508,10 +508,10 @@ Hero.prototype.levelUp = function() {
 
 Hero.prototype.draw = function() {
     // pre-render and then draw the health bar
-    var offCanvas = document.createElement('canvas'), 
-        ctx = offCanvas.getContext('2d'), 
-        startDrawingX = 48, 
-        startDrawingY = this.game.frameHeight - 40, 
+    var offCanvas = document.createElement('canvas'),
+        ctx = offCanvas.getContext('2d'),
+        startDrawingX = 48,
+        startDrawingY = this.game.frameHeight - 40,
         picWidth = 255,
         barWidth = 200,
         picHeight = 30;
@@ -552,7 +552,7 @@ Hero.prototype.draw = function() {
     AnimatedEntity.prototype.draw.call(this, this.offsetX - this.width, this.offsetY);
 }
 // override
-Hero.prototype.emitSound = function(soundName) {
+Hero.prototype.emitSound = $.noop /* ANDREW */ || function(soundName) {
     if (!this.sound.isPlaying) {
         // playing for the very first time
         this.sound.name = soundName;
@@ -584,7 +584,7 @@ Hero.prototype.isAtGoal = function() {
         goalStartY = this.game.dungeon.goalTileY*this.game.dungeon.tileSize,
         goalEndX = goalStartX + this.game.dungeon.tileSize,
         goalEndY = goalStartY + this.game.dungeon.tileSize;
-        
+
     var goalRect = new Rectangle(goalStartX, goalEndX, goalStartY, goalEndY);
         heroRect = new Rectangle(this.game.hero.x, this.game.hero.x + this.game.hero.scaleToX,
                                   this.game.hero.y, this.game.hero.y + this.game.hero.scaleToY);
@@ -592,14 +592,14 @@ Hero.prototype.isAtGoal = function() {
     if (goalRect.isIntersecting(heroRect)) {
         levelComplete = true;
     }
-   
+
 }
 
 // tell the player where to go
 Hero.prototype.sayDirection = function() {
     // use A* path planning to find the correct way to go
     var adjustedCoords = this.getAdjustedCoords(this.x, this.y),
-        planner = new PathFinder(this.game, 
+        planner = new PathFinder(this.game,
                         /*new Goal(this.game.dungeon.randDungeonGen, this.game, adjustedCoords.x*this.game.dungeon.tileSize,
                                   adjustedCoords.y*this.game.dungeon.tileSize),*/
                                  this,
@@ -616,20 +616,20 @@ Hero.prototype.sayDirection = function() {
         rand = Math.random(),
         that = this,
         advice = '';
-        
+
     console.log(path);
     console.log("(" + currentTileX + ", " + currentTileY + ")");
     console.log("(" + Math.floor(this.x/this.game.dungeon.tileSize) + ", " + Math.floor(this.y/this.game.dungeon.tileSize) + ")");
     // get the advice
     //this.advice = this.getAdvice(path, 1, currentTileX, currentTileY, null);
     this.advice = this.getAdvice(path, 0, path[0].x, path[0].y, null);
-    
+
     // tell the player the correct direction to go
     myAudio.say(this.game.voice, this.game.language, this.advice + '.');
     myAudio.getAudio().addEventListener('ended', function() {
         that.tellingDirection = false;
     }, false);
-    
+
 }
 
 // recursive function to get the correct advice with respect to where to move next
@@ -638,7 +638,7 @@ Hero.prototype.getAdvice = function(path, indexToConsider, currentTileX, current
     if (!path[indexToConsider]) {
         return 'Advice cannot be given for your location.';
     }
-    
+
     var next = path[indexToConsider],
     /*var next = this.getAdjustedCoords(path[indexToConsider].x*this.game.dungeon.tileSize, path[indexToConsider].y*this.game.dungeon.tileSize);
     next.x = Math.floor(next.x/this.game.dungeon.tileSize);
@@ -648,7 +648,7 @@ Hero.prototype.getAdvice = function(path, indexToConsider, currentTileX, current
         actualDx = 0, // the proposed change to x based on advice
         actualDy = 0, // the proposed change to y based on advice
         advice = 'Go ';
-    
+
     // if we are already there, consider the next index
     if (dx === 0 && dy === 0) {
         this.getAdvice(path, ++indexToConsider, currentTileX, currentTileY, failedAdvice);
@@ -675,49 +675,49 @@ Hero.prototype.getAdvice = function(path, indexToConsider, currentTileX, current
             return this.getAdvice(path, ++indexToConsider, currentTileX, currentTileY, null);
         }
     }
-    
+
     var fAdv = this.advice.replace('Go ', ''),
         ffAdv = advice.replace('Go ', '');
-   
+
     // if we keep giving conflicting advice i.e. go north, then go south, then go north again, we have to change the direction
-    this.adviceConfusedX = (fAdv === 'west' && ffAdv === 'east') || 
+    this.adviceConfusedX = (fAdv === 'west' && ffAdv === 'east') ||
                            (fAdv === 'east' && ffAdv === 'west') ? true : false;
     this.adviceConfusedY = (fAdv === 'north' && ffAdv === 'south') ||
                            (fAdv === 'south' && ffAdv === 'north') ? true : false;
-                           
+
     console.log(this.adviceConfusedX, this.adviceConfusedY);
-    
+
     // if we are confused, don't even bother telling the current advice, consider the next configuration in the A* path
     if (this.adviceConfusedX || this.adviceConfusedY) {
         console.log("adviceConfusedX: " + this.adviceConfusedX + ", \nadviceConfusedY: " + this.adviceConfusedY);
         return this.getAdvice(path, ++indexToConsider, currentTileX, currentTileY, advice);
     }
-    
+
     // either the next tile is blocked or we are giving the same bad advice,
-    // so consider the subsequent tile in the path to the goal 
+    // so consider the subsequent tile in the path to the goal
     if (!this.isPathClear((currentTileX + actualDx)*this.game.dungeon.tileSize,
          (currentTileY + actualDy)*this.game.dungeon.tileSize, true, false, false) ||
         (failedAdvice && failedAdvice === advice)) {
         return this.getAdvice(path, ++indexToConsider, currentTileX, currentTileY, advice);
     }
-    
+
     return advice;
 }
 
 
-// states verbally the number of enemies that are left in current level 
+// states verbally the number of enemies that are left in current level
 Hero.prototype.sayEnemyCount = function() {
     var enemyCount = 0;
-    
+
     for (var i = 0; i < this.game.entities.length; ++i) {
         var entityConstructor = this.game.entities[i].constructor;
-        
+
         if (entityConstructor.name && (entityConstructor.name === 'Ogre' || entityConstructor.name === 'Skeleton')) {
             ++enemyCount;
         }
     }
-    
-    myAudio.say(this.game.voice, this.game.language, enemyCount + ' enemies currently alive.');   
+
+    myAudio.say(this.game.voice, this.game.language, enemyCount + ' enemies currently alive.');
 }
 
 Hero.prototype.update = function() {
@@ -730,23 +730,23 @@ Hero.prototype.update = function() {
         // very low health
         this.game.msgLog.log('Warning, very low health');
         this.warnedVeryLowHealth = true;
-        
+
     } else if (this.health <= this.LOW_HEALTH_WARNING && !this.warnedLowHealth) {
         // warn the player about low health
         this.game.msgLog.log('Warning, low health');
         this.warnedLowHealth = true;
-        
+
     }  else if (this.health > this.LOW_HEALTH_WARNING) {
         this.warnedLowHealth = false;
-        
+
     } else if (this.health > this.VERY_LOW_HEALTH_WARNING) {
         this.warnedVeryLowHealth = false;
     }
 
-    var delta = this.game.now ? this.getDeltaPosition() : 0, 
-        baseOffsetY = 518, 
+    var delta = this.game.now ? this.getDeltaPosition() : 0,
+        baseOffsetY = 518,
         punchOffset = 514;
-    
+
     switch (this.game.key) {
         case 38: // up arrow
         case 87: // 'W'
@@ -808,7 +808,7 @@ Hero.prototype.update = function() {
         case 77: // "m" was pressed. Tell the user how many enemies are left
             this.sayEnemyCount();
             break;
-            
+
         case 72: // h for help
             // tell the user via speech where to go
             if (!this.tellingDirection) {
@@ -817,7 +817,7 @@ Hero.prototype.update = function() {
                 this.sayDirection();
             }
             break;
-            
+
         default:
             this.game.key = null;
             this.game.previousKey = null;
@@ -825,7 +825,7 @@ Hero.prototype.update = function() {
                 this.stopSound();
             }
     }
-    
+
     if (this.game.key === 77 || this.game.key === 72) {
         this.game.key = null;
         this.game.previousKey = null;
@@ -834,8 +834,8 @@ Hero.prototype.update = function() {
     if (!this.game.key && this.animation && this.direction !== 'punch') {// hero is currently animated, but no key is pressed => end animation
         this.animation = null;
     } else if ((this.game.key && !this.animation) || (this.animation && this.direction !== this.animation.direction)) {// key is pressed, but no animation is present => start animation
-        this.animation = this.direction === 'punch' ? 
-                        new Animation(this.image, this.width, this.height, 11, 2 / 3, this.game.now, this.offsetX, this.offsetY, false) : 
+        this.animation = this.direction === 'punch' ?
+                        new Animation(this.image, this.width, this.height, 11, 2 / 3, this.game.now, this.offsetX, this.offsetY, false) :
                         new Animation(this.image, this.width, this.height, 8, 0.5, this.game.now, this.offsetX, this.offsetY);
 
         this.animation.direction = this.direction;
@@ -852,11 +852,11 @@ Hero.prototype.update = function() {
         // recover health while not in combat
         this.recoverHealth();
     }
-    
+
     if (this.direction !== this.game.heroStartDirection) {
         this.isInitialConfiguration = false;
     }
-    
+
     if (this.isInitialConfiguration) {
             switch (this.direction) {
                 case 'up':
@@ -877,13 +877,13 @@ Hero.prototype.update = function() {
     console.log('overriding current animation');
     this.animation = new Animation(ASSET_MANAGER.getAsset('images/hero.png'), this.width, this.height, 8, 0.5, this.game.now, this.offsetX, this.offsetY);
     }*/
-    
+
     if (this.game.audioContext) {
         // update the AudioListener with the entity's positions
         this.game.audioContext.listener.setPosition(Math.floor(this.x + this.scaleToX/4),
                                                     -Math.floor((this.y + this.scaleToY/4)), 0);
     }
-    
+
     // check to see whether the hero has made it to the exit (goal)
     this.isAtGoal();
     // update info about the hero
@@ -1071,7 +1071,7 @@ Enemy.prototype.getDirection = function() {
         this.goalX = tile.x * this.game.dungeon.tileSize;
         this.goalY = tile.y * this.game.dungeon.tileSize;
     }
-    
+
     var adjustedPos = this.getAdjustedCoords(this.x, this.y),
         posInTiles = {
             x: Math.floor(adjustedPos.x/this.game.dungeon.tileSize),
@@ -1081,7 +1081,7 @@ Enemy.prototype.getDirection = function() {
             x: Math.floor(this.goalX/this.game.dungeon.tileSize),
             y: Math.floor(this.goalY/this.game.dungeon.tileSize)
         };
-        
+
     // decide on the direction based on the current position relative to the goal position
     if (goalInTiles.x !== posInTiles.x) {
         if (goalInTiles.x < posInTiles.x) {// goal lies to the left
@@ -1096,7 +1096,7 @@ Enemy.prototype.getDirection = function() {
             direction = 'down';
         }
     }
-    
+
     var pos = this.getAdjustedCoords(this.x, this.y);
     return direction;
 }
@@ -1119,17 +1119,17 @@ Enemy.prototype.isAtGoalPosition = function() {
     var enemyRect = new Rectangle(this.x, this.x + this.scaleToX, this.y, this.y + this.scaleToY),
          heroRect = new Rectangle(this.game.hero.x, this.game.hero.x + this.game.hero.scaleToX,
                                   this.game.hero.y, this.game.hero.y + this.game.hero.scaleToY);
-       
+
      // ge tthe adjusted coordinates and the
      var pos = this.getAdjustedCoords(this.x, this.y);
-     
-     
+
+
      pos.x = Math.floor(pos.x/this.game.dungeon.tileSize);
      pos.y = Math.floor(pos.y/this.game.dungeon.tileSize);
-          
-   /* if (enemyRect.isIntersecting(heroRect) || (this.x <= this.goalX && this.x + this.scaleToX >= this.goalX) 
+
+   /* if (enemyRect.isIntersecting(heroRect) || (this.x <= this.goalX && this.x + this.scaleToX >= this.goalX)
         && (this.y <= this.goalY && this.y + this.scaleToY >= this.goalY)) {*/
-    if (enemyRect.isIntersecting(heroRect) || 
+    if (enemyRect.isIntersecting(heroRect) ||
         (pos.x === Math.floor(this.goalX/this.game.dungeon.tileSize) && pos.y === Math.floor(this.goalY/this.game.dungeon.tileSize))) {
         return true;
     }
@@ -1315,7 +1315,7 @@ Gem.prototype.pickUp = function(playSound) {
     // will hold a function to the effect
     var activateEffect = null,
         playSound = typeof playSound === 'undefined' ? true : playSound;
-    
+
     if (playSound) {
         this.game.msgLog.log('You picked up a ' + this.color + ' gem!');
         this.emitSound('sounds/itemGain.mp3', false);
@@ -1370,27 +1370,27 @@ function Dungeon(game, enemyProbability, miscProbability) {
 // use a two dimensional array to keep track of the initial objects and entities in the dungeon
 Dungeon.prototype.generateDungeon = function() {
     levelComplete = false;
-    
+
     var numTilesX = Math.ceil(this.game.frameWidth / this.tileSize),
         numTilesY = Math.ceil(this.game.frameHeight / this.tileSize);
-        
-    
+
+
     // generate a completely randomized dungeon
     // this.randDungeonGen = new RandomizeDungeon(this.game, numTilesX, numTilesY);
-    // this.map = this.randDungeonGen.generateDungeon(this.goalTileX, this.goalTileY, 
+    // this.map = this.randDungeonGen.generateDungeon(this.goalTileX, this.goalTileY,
                                                     // Math.floor(this.game.HERO_STARTX/this.tileSize),
                                                     // Math.floor(this.game.HERO_STARTY/this.tileSize));
-     
+
     // Alternative dungeon generation
     this.randDungeonGen = new RandomizeDungeon(this.game, numTilesX, numTilesY);
     this.map = this.randDungeonGen.generateRooms();
-    
+
     // after we generate this map, we have to make sure that there are no walls/enemies near the hero's start point
     this.markHeroTerritory(numTilesX, numTilesY);
-    
+
     // make the goal tile a free space (no wall)
     this.map[this.goalTileX][this.goalTileY].type = 'F';
-    
+
     // as a last step, iterate the map as a two-dimensional matrix and generate the appropriate object at the (x, y) position
     for (var i = 0; i < numTilesX; ++i) {
         for (var j = 0; j < numTilesY; ++j) {
@@ -1401,50 +1401,50 @@ Dungeon.prototype.generateDungeon = function() {
 }
 
 Dungeon.prototype.markHeroTerritory = function(numTilesX, numTilesY) {
-    // offsets for positioning the start 
+    // offsets for positioning the start
     var SAFETY_AREA_SIZE = 4, // safety area for the hero at the start of a dungeon level so that enemies aren't near
         WALL_OFFSET = 2;
-        
+
     var possibleStartPos = [
         {x: 1, y: 1}, // top left
         {x: numTilesX - SAFETY_AREA_SIZE, y: 1}, // top right
         {x: numTilesX - SAFETY_AREA_SIZE, y: numTilesY - SAFETY_AREA_SIZE}, // bottom right
         {x: 1, y: numTilesY - SAFETY_AREA_SIZE} // bottom left
         ];
-        
+
     var possibleGoalPos = [
         {x: numTilesX - WALL_OFFSET, y: numTilesY - WALL_OFFSET}, // bottom right corresponds to top left start
         {x: 1, y: numTilesY - WALL_OFFSET}, // bottom left corresponds to top right start
         {x: 1, y: 1}, // top left corresponds to bottom right start
         {x: numTilesX - WALL_OFFSET, y : 1} // top right corresponds to bottom left start
     ];
-    
+
     var randChoice = Math.floor(Math.random()*possibleStartPos.length),
         startPos = possibleStartPos[randChoice],
         goalPos = possibleGoalPos[randChoice];
-    
+
     // initialize the start position for the hero
     this.game.HERO_STARTX = Math.ceil(startPos.x * this.tileSize);
     this.game.HERO_STARTY = Math.ceil(startPos.y * this.tileSize);
-    
+
     // set the hero's initial direction depending on its start position
     this.game.heroStartDirection = randChoice < 2 ? 'down' : 'up';
-    
+
     // reserve the starting space for the hero so that there are no walls or enemies nearby
     for (var x = startPos.x; x < startPos.x + SAFETY_AREA_SIZE - 1; ++x) {
         for (var y = startPos.y; y < startPos.y + SAFETY_AREA_SIZE - 1; ++y) {
             this.map[x][y].type = 'R';
         }
     }
-    
+
     // set the position of the goal (aka the exit to complete the dungeon level)
     this.goalTileX = goalPos.x;
     this.goalTileY = goalPos.y;
-    
+
     // connect both the hero and the goal to the nearest room
     this.randDungeonGen.connectNearestRoomToPoint(startPos.x, startPos.y);
     this.randDungeonGen.connectNearestRoomToPoint(goalPos.x, goalPos.y);
-  
+
 }
 
 // return wall based on the map
@@ -1453,7 +1453,7 @@ Dungeon.prototype.isFree = function(i, j) {
     if (this.map[i][j].type === 'W' || this.map[i][j].type === 'R') {
         return false;
     }
-    
+
     return true;
 }
 
@@ -1469,7 +1469,7 @@ Dungeon.prototype.generateObject = function(i, j, numTilesX, numTilesY) {
             this.game.addEntity(new Fire(this.game, xPos, yPos, 64, 64));
             return 'M'; // 'M' for Misc.
         } else
-        
+
         if (rand >= 1 - this.enemyProbability) {
             var enemy = null;
 
@@ -1601,22 +1601,22 @@ GameEngine.prototype.restartGame = function(newHero, isGameOver) {
     } else {
         myAudio.say(this.voice, this.language, 'Congratulations, you have completed dungeon level ' + (this.dungeonLevel - 1));
     }
-    
+
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // stop all sounds currently being emitted 
+
+    // stop all sounds currently being emitted
     this.entities.forEach(function(entity, index) {
         // does the entity have a stopSound method?
         if (entity.stopSound && typeof entity.stopSound === 'function') {
             entity.stopSound();
         }
     }, this);
-    
+
     if (levelComplete) {
         game.hero.emitSound('sounds/level_complete.wav');
     }
-    
+
     this.entities = [];
     this.dungeon.generateDungeon();
     // generate a new hero if specified (default is true)
@@ -1649,7 +1649,7 @@ GameEngine.prototype.loop = function() {
         this.restartGame();
         return;
     }
-    
+
     if (levelComplete) {
         this.initNextLevel();
         return;
@@ -1675,10 +1675,10 @@ GameEngine.prototype.draw = function() {
 GameEngine.prototype.update = function() {
     for (var i = 0; i < this.entities.length; ++i) {
         // stop iterating if game is over
-        if (gameOver || levelComplete) { 
+        if (gameOver || levelComplete) {
             break;
         }
-        
+
         var entity = this.entities[i];
         // keep track of the entity's position so that we can update the dungeon map
         var oldPosition = {
@@ -1706,7 +1706,7 @@ GameEngine.prototype.update = function() {
     // why backwards? Indexing forward and deleting as we go would
     // cause an indexOutOfBounds exception since the array no longer
     // contains the initial length of items
-    
+
     for (var i = this.entities.length - 1; i >= 0; --i) {
         if (!this.entities[i].alive) {
             // if the entity is no longer alive remove it from the entities array
@@ -1812,10 +1812,10 @@ GameEngine.prototype.getLoadingScreen = function() {
 }
 
 GameEngine.prototype.initGameButtons = function() {
-    var $div = $('#options'), 
+    var $div = $('#options'),
         $canvas = $('#canvas'),
         that = this,
-        xOffset = -40, 
+        xOffset = -40,
         yOffset = -(this.dungeon.tileSize * 2 - $div.height()) / 2;// center the buttons vertically
     // place the buttons to the lower right of the canvas
     $div.css({
@@ -1825,8 +1825,8 @@ GameEngine.prototype.initGameButtons = function() {
     });
 }
 
-var ASSET_MANAGER = new AssetManager(), 
-    canvas, 
+var ASSET_MANAGER = new AssetManager(),
+    canvas,
     game,
     gameOver,
     voice = 'child',
@@ -1834,7 +1834,7 @@ var ASSET_MANAGER = new AssetManager(),
     levelComplete = false,
     animFrame,
     gameKeys = [37, 40, 32, 87, 65, 83, 68, 72, 77];
-    
+
 // these keys cause circular reference in JSON.stringify, so avoid them
 function censor(key, value) {
     if (key === 'game' || key === '$dialog' || key === 'randDungeonGen' || key === 'tile') {
@@ -1845,15 +1845,15 @@ function censor(key, value) {
 
 function showCanvas() {
     var sideMargin = 0;
-    
+
     $('#gameMenu, #uncLogo').hide();
     // set canvas width to occupy the whole page
     canvas = document.getElementById('canvas');
-    
+
     $('#canvas').css('visibility', 'visible');
     // get the correct side margins
     sideMargin = ($(document).width() - $(canvas).width())/2;
-        
+
     // adjust margins (normal css margins don't work for some reason)
     $('#canvas').css({
         'margin-left': sideMargin,
@@ -1861,7 +1861,7 @@ function showCanvas() {
         'margin-top': -2
     });
 }
-    
+
 // global function for loading the game
 function loadGame() {
     if (localStorage && localStorage['savedGameExists'] === 'true') {
@@ -1869,31 +1869,31 @@ function loadGame() {
         canvas = document.getElementById('canvas');
         game = new GameEngine(canvas.getContext('2d'));
         lCanv = game.getLoadingScreen();
-        
+
         showCanvas();
         // queue all assets
         queueAllAssets();
-        
+
         // display the loading screen while we download assets
         game.ctx.drawImage(lCanv, (game.frameWidth - lCanv.width) / 2, (game.frameHeight - lCanv.height) / 2);
-        
+
         var gameInfo = JSON.parse(localStorage['gameInfo']),
             entities = JSON.parse(localStorage['entities']),
             map = JSON.parse(localStorage['map']),
             dungeon = null,
             numTilesX = 0,
             numTilesY = 0;
-        
+
         ASSET_MANAGER.downloadAll(game, function() {
             // before we create the enemies and our hero, we need to set our dungeon level
             game.dungeonLevel = parseInt(gameInfo.dungeonLevel, 10);
-            
+
             // retrieve the entities and the dungeon
             for (var i = 0; i < entities.length; ++i) {
                 var entity = entities[i],
                     newEntity = null,
                     items = null;
-                    
+
                 switch (entity.type) {
                     case 'Hero':
                         newEntity = new Hero(game, entity.x, entity.y, 64, 64, entity.direction);
@@ -1905,7 +1905,7 @@ function loadGame() {
                         newEntity.inventory = new Inventory(game);
                         newEntity.stats = new Stats(game);
                         game.hero = newEntity;
-                        
+
                         items = typeof entity.items === 'undefined' ? [] : JSON.parse(entity.items);
                         // for each of the items, we have to add them since we don't have them in Item 'form'
                         items.forEach(function(item) {
@@ -1924,29 +1924,29 @@ function loadGame() {
                         newEntity = new Ogre(game, entity.x, entity.y, 31, 48);
                         break;
                 }
-                
+
                 if (newEntity) {
                     newEntity.health = entity.health;
                     game.addEntity(newEntity);
                 }
             }
-            
+
             dungeon = new Dungeon(game, game.ENEMY_PROBABILITY, game.MISC_PROBABILITY);
             dungeon.map = map;
-            
+
             numTilesX = Math.ceil(game.frameWidth / dungeon.tileSize);
-            numTilesY = Math.ceil(game.frameHeight / dungeon.tileSize); 
-                          
+            numTilesY = Math.ceil(game.frameHeight / dungeon.tileSize);
+
             dungeon.randDungeonGen = new RandomizeDungeon(game, numTilesX, numTilesY);
             dungeon.randDungeonGen.map = map;
-            
+
             dungeon.goalTileX = parseInt(gameInfo.goalTileX, 10);
-            dungeon.goalTileY = parseInt(gameInfo.goalTileY, 10);    
+            dungeon.goalTileY = parseInt(gameInfo.goalTileY, 10);
             game.dungeon = dungeon;
             game.trackEvents();
             game.initGameButtons();
             game.start();
-            
+
             // indicate success
             game.msgLog.log('Game loaded, welcome back to dungeon level ' + game.dungeonLevel);
         }); // end downloadAll
@@ -1956,8 +1956,8 @@ function loadGame() {
 // global function for saving the game
 function saveGame() {
     var gameObjects = [];
-        
-    // iterate through the objects and store important info 
+
+    // iterate through the objects and store important info
     game.entities.forEach(function(entity, index) {
         if (entity.constructor.name === 'Hero') {
             gameObjects.push({
@@ -1985,20 +1985,20 @@ function saveGame() {
 
     // store the entities
     localStorage['entities'] = JSON.stringify(gameObjects, censor);
-        
+
     // save the dungeon
     localStorage['map'] = JSON.stringify(game.dungeon.map, censor);
-        
+
     // save important game information
     localStorage['gameInfo'] = JSON.stringify({
         dungeonLevel: game.dungeonLevel,
         goalTileX: game.dungeon.goalTileX,
         goalTileY: game.dungeon.goalTileY
     });
-        
+
     // indicate that a saved game exists
     localStorage['savedGameExists'] = true;
-        
+
     // indicate success
     game.msgLog.log('Saved game');
 }
@@ -2019,7 +2019,7 @@ function queueAllAssets() {
     for (var i = 0; i < game.GEM_COLORS.length; ++i) {
         ASSET_MANAGER.queueDownload('images/' + game.GEM_COLORS[i] + '_gem.png');
     }
-    
+
     // Download sounds
     ASSET_MANAGER.queueSound('sounds/bump.wav');
     ASSET_MANAGER.queueSound('sounds/useItem.mp3');
@@ -2032,25 +2032,25 @@ function queueAllAssets() {
     ASSET_MANAGER.queueSound('sounds/shine.wav');
     ASSET_MANAGER.queueSound('sounds/walking.wav');
 }
-    
+
 $(function() {
     // initialize myAudio object for text to speech use
     myAudio.initialize();
     myAudio.say(voice, language, 'Welcome to Dungeon Quest, press TAB to navigate menu');
-    
+
     // initialize High Scores
     var highScores = new HighScores();
-    
+
     // game menu code
     var $gameLinks = $('#gameMenu').find('a'),
         $saveGame = $('#saveGame'),
         $backToMenu = $('#backToMenu');
-    
+
     // tell the user via speech the text on the button on focus
     $gameLinks.add($backToMenu).on('focus', function() {
         myAudio.say(voice, language, $(this).text());
     });
-    
+
     // allow the player to press enter on any game menu to imitate clicking on it
     $gameLinks.add($backToMenu).on('keyup', function(e) {
         var keyCode = e.keyCode || e.which;
@@ -2060,35 +2060,35 @@ $(function() {
             e.preventDefault();
         }
     });
-    
+
     $('#backToMenu').button().on('click', function() {
         // the user wants to go back to menu, ask if he/she wants to save the game
         $saveGame.click();
-        
+
         // stop the game loop if one exists
         if (animFrame) {
             cancelRequestAnimationFrame(animFrame);
         }
-        
+
         // hide the canvas
         $('#canvas').css('visibility', 'hidden');
-        
+
         // hide the buttons
         $('#options').fadeOut();
-        
+
         // show the game menu and the logo
         $('#gameMenu, #uncLogo').slideDown();
     });
-    
+
     // initialize the save game button
     $saveGame.button().on('click', function() {
           // make sure that the user wants to save the game (override previous saved game)
         if (game && localStorage && localStorage['savedGameExists'] === 'true') {
             var text = 'Saving this game would replace the currently saved game would you like to continue, ' +
                        'press ENTER for yes or escape for no';
-                       
+
             myAudio.say(voice, language, text);
-            
+
             // as soon as we started telling the instructions, show the confirm dialog
             myAudio.getAudio().addEventListener('playing', function() {
                 if (confirm(text.replace(',', '?'))) {
@@ -2096,48 +2096,48 @@ $(function() {
                 } else {
                     myAudio.say(voice, language, 'did not save game');
                 }
-                
-                // remove the event listener so that we don't 
+
+                // remove the event listener so that we don't
                 this.removeEventListener('playing', arguments.callee, false);
             }, false);
         } else {
             alert('Your browser does not support localStorage');
         }
     });
-    
+
     // say the name of the button on focus
     $saveGame.on('focus', function() {
         myAudio.say(voice, language, $(this).text());
     });
-    
+
     $('#loadGame').on('click', function() {
         loadGame();
     });
-    
+
     // new game is clicked
     $('#newGame').on('click', function() {
     //window.addEventListener('load', function() {
-        
+
         // show the canvas
         showCanvas();
-        
+
         /*canvas.width = document.width;
          canvas.height = document.height;*/
-    
+
         game = new GameEngine(canvas.getContext('2d'));
         var lCanv = game.getLoadingScreen();
-    
+
         // display the loading screen while we load assets
         game.ctx.drawImage(lCanv, (game.frameWidth - lCanv.width) / 2, (game.frameHeight - lCanv.height) / 2);
-    
+
         // update appCache if appropriate
         ASSET_MANAGER.updateAppCache();
-        
+
         // queue all assets
         queueAllAssets();
         // let the user know we are loading assets
         myAudio.say(game.voice, game.language, 'Loading, please wait');
-    
+
         ASSET_MANAGER.downloadAll(game, function() {
             console.log('All assets have been loaded succesfully.');
             game.init();
